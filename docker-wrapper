@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+# The MIT License
+#
+#  Copyright (c) 2017, Empatica, Inc.
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+#  THE SOFTWARE.
+
+# Usage jenkins-slave.sh [options] -url http://jenkins [SECRET] [AGENT_NAME]
+# Optional environment variables :
+# * JENKINS_TUNNEL : HOST:PORT for a tunnel to route TCP traffic to jenkins host, when jenkins can't be directly accessed over network
+# * JENKINS_URL : alternate jenkins URL
+# * JENKINS_SECRET : agent secret, if not set as an argument
+# * JENKINS_AGENT_NAME : agent name, if not set as an argument
+# * JENKINS_AGENT_WORKDIR : agent work directory, if not set as an argument
+
+DOCKER_GID=$(ls -lan /var/run/docker.sock  | awk '{print $4}')
+# DOCKER_GROUP=$(ls -la /var/run/docker.sock  | awk '{print $4}')
+
+echo "GID: $DOCKER_GID"
+# echo "GROUP: $DOCKER_GROUP"
+
+if (which docker) ; then
+    echo "Docker is already installed or bind mounted into container"
+
+    if ! (getent group "$DOCKER_GID") ; then
+        echo "Creating docker group with GID $DOCKER_GID"
+        # addgroup --gid "$DOCKER_GID" "$DOCKER_GROUP"
+        addgroup --gid "$DOCKER_GID" docker
+    fi
+
+    # if ! (id -nG jenkins | grep -qw "$DOCKER_GROUP") ; then
+    if ! (id -nG jenkins | grep -qw docker) ; then
+        # echo "Adding jenkins user to group $DOCKER_GROUP with GID $DOCKER_GID"
+        echo "Adding jenkins user to group docker with GID $DOCKER_GID"
+        # adduser jenkins "$DOCKER_GROUP"
+        adduser jenkins docker
+    fi
+else
+    echo "Docker is not present, going to install it"
+    # TODO, not needed for now
+fi
+
+id
+su jenkins
+id
+
+exec jenkins-slave "$@"
