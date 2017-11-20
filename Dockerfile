@@ -1,4 +1,4 @@
-FROM jenkinsci/jnlp-slave:3.10-1
+FROM jenkinsci/jnlp-slave:3.14-1
 MAINTAINER Giannicola Olivadoti <go@empatica.com>
 
 USER root

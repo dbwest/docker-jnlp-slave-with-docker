@@ -1,5 +1,5 @@
 IMAGE = empatica/jnlp-slave-with-docker
-VERSION = 3.10-1
+VERSION = 3.14-1
 
 .PHONY: build push release
 
